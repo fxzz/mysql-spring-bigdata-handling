@@ -19,8 +19,8 @@ public class MemberReadService {
     private final MemberRepository memberRepository;
     private final MemberNicknameHistoryRepository memberNicknameHistoryRepository;
 
-    public MemberDto getMember(Long id) {
-        return toDto(memberRepository.findById(id).orElseThrow());
+    public Member getMember(Long memberId) {
+        return memberRepository.findById(memberId).orElseThrow();
     }
 
     public List<MemberNicknameHistoryDto> getNicknameHistories(Long memberId) {
@@ -28,11 +28,13 @@ public class MemberReadService {
                 .map(this::toDto).toList();
     }
 
-    public MemberDto toDto(Member member) {
-        return new MemberDto(member.getId(), member.getEmail(), member.getNickname(), member.getBirthday());
-    }
 
     private MemberNicknameHistoryDto toDto(MemberNicknameHistory history) {
         return new MemberNicknameHistoryDto(history.getId(), history.getMemberId(), history.getNickname(), history.getCreatedAt());
     }
+
+    public List<Member> getMembers(List<Long> memberIds) {
+        return memberRepository.findAllByIdIn(memberIds);
+    }
+
 }

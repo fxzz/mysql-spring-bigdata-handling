@@ -27,7 +27,7 @@ import java.util.Optional;
 public class MemberRepository {
     static final String TABLE = "user";
 
-    private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
 
     private static final RowMapper<Member> ROW_MAPPER = (ResultSet resultSet, int rowNum) -> Member.builder()
             .id(resultSet.getLong("id"))
@@ -38,13 +38,16 @@ public class MemberRepository {
             .build();
 
     public Optional<Member> findById(Long id) {
-        String query = String.format("SELECT * FROM `%s` WHERE id = ?", TABLE);
-        List<Member> members = jdbcTemplate.query(query, ROW_MAPPER, id);
+        var params = new MapSqlParameterSource()
+                .addValue("id", id);
+        String query = String.format("SELECT * FROM `%s` WHERE id = :id", TABLE);
+        List<Member> members = jdbcTemplate.query(query, params, ROW_MAPPER);
 
         // jdbcTemplate.query의 결과 사이즈가 0이면 null, 2 이상이면 예외
         Member nullableMember = DataAccessUtils.singleResult(members);
         return Optional.ofNullable(nullableMember);
     }
+
 
     public Member save(Member member) {
         if (member.getId() == null)
@@ -53,7 +56,7 @@ public class MemberRepository {
     }
 
     private Member insert(Member member) {
-        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate.getJdbcTemplate())
                 .withTableName(TABLE)
                 .usingGeneratedKeyColumns("id");
 
@@ -68,10 +71,24 @@ public class MemberRepository {
                 .build();
     }
 
+
     private Member update(Member member) {
-        var sql = String.format("UPDATE `%s` set email = ?, nickname = ?, birthday = ? WHERE id = ?", TABLE);
-        jdbcTemplate.update(sql, member.getEmail(), member.getNickname(), member.getBirthday(), member.getId());
+        var params = new BeanPropertySqlParameterSource(member);
+        var sql = String.format("UPDATE `%s` set email = :email, nickname = :nickname, birthday = :birthday WHERE id = :id", TABLE);
+        jdbcTemplate.update(sql, params);
         return member;
     }
+
+    public List<Member> findAllByIdIn(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        var params = new MapSqlParameterSource()
+                .addValue("ids", ids);
+        String query = String.format("SELECT * FROM `%s` WHERE id in (:ids)", TABLE);
+        return jdbcTemplate.query(query, params, ROW_MAPPER);
+    }
+
 }
 

@@ -26,13 +26,13 @@ public class MemberController {
     }
 
     @GetMapping("/members/{id}")
-    public MemberDto getMember(@PathVariable Long id) {
+    public Member getMember(@PathVariable Long id) {
        return memberReadService.getMember(id);
     }
 
 
     @PostMapping("/{id}/name")
-    public MemberDto changeNickname(@PathVariable Long id, @RequestBody String nickname) {
+    public Member changeNickname(@PathVariable Long id, @RequestBody String nickname) {
         memberWriteService.changeNickname(id, nickname);
         return memberReadService.getMember(id);
     }
