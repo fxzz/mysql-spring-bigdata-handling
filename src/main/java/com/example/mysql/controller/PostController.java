@@ -33,7 +33,7 @@ public class PostController {
             "firstDate": "2023-07-04",
             "lastDate": "2023-07-06"
         }
-        
+
         응답:
         [
           {
