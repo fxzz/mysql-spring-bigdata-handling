@@ -6,3 +6,12 @@ CREATE TABLE user (
                         createdAt DATETIME NOT NULL,
                         PRIMARY KEY (id)
 );
+
+create table UserNicknameHistory
+(
+    id int auto_increment,
+    memberId int not null,
+    nickname varchar(20) not null,
+    createdAt datetime not null,
+        primary key (id)
+);
