@@ -38,4 +38,13 @@ create table POST
     createdAt datetime not null,
     constraint POST_id_uindex
         primary key (id)
-)
+);
+
+create index POST__index_member_id
+    on POST (memberId);
+
+create index POST__index_created_date
+    on POST (createdDate);
+
+create index POST__index_member_id_created_date
+    on POST (memberId, createdDate);
