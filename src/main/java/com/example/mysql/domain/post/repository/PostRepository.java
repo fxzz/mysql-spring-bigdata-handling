@@ -56,6 +56,50 @@ public class PostRepository {
         return jdbcTemplate.query(query, params, ROW_MAPPER);
     }
 
+    public List<Post> findAllByLessThanIdAndMemberIdInAndOrderByIdDesc(Long id, List<Long> memberIds, int size) {
+        if (memberIds.isEmpty()) {
+            return List.of();
+        }
+
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("memberIds", memberIds)
+                .addValue("size", size);
+
+        String query = String.format("""
+                SELECT *
+                FROM %s
+                WHERE memberId in (:memberIds) and id < :id
+                ORDER BY id DESC
+                LIMIT :size
+                """, TABLE);
+
+        return jdbcTemplate.query(query, params, ROW_MAPPER);
+
+    }
+
+
+    public List<Post> findAllByMemberIdInAndOrderByIdDesc(List<Long> memberIds, int size) {
+        if (memberIds.isEmpty()) {
+            return List.of();
+        }
+
+        var params = new MapSqlParameterSource()
+                .addValue("memberIds", memberIds)
+                .addValue("size", size);
+
+        String query = String.format("""
+                SELECT *
+                FROM %s
+                WHERE memberId in (:memberIds)
+                ORDER BY id DESC
+                LIMIT :size
+                """, TABLE);
+
+        return jdbcTemplate.query(query, params, ROW_MAPPER);
+
+    }
+
     public List<Post> findAllByMemberIdAndOrderByIdDesc(Long memberId, int size) {
         var params = new MapSqlParameterSource()
                 .addValue("memberId", memberId)

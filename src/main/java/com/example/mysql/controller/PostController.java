@@ -1,5 +1,6 @@
 package com.example.mysql.controller;
 
+import com.example.mysql.application.usacase.GetTimelinePostsUsecase;
 import com.example.mysql.domain.post.dto.DailyPostCount;
 import com.example.mysql.domain.post.dto.DailyPostCountRequest;
 import com.example.mysql.domain.post.dto.PostCommand;
@@ -22,6 +23,7 @@ public class PostController {
 
     private final PostWriteService postWriteService;
     private final PostReadService postReadService;
+    final private GetTimelinePostsUsecase getTimelinePostsUsecase;
 
     @PostMapping("")
     public Long create(@RequestBody PostCommand command) {
@@ -82,5 +84,18 @@ public class PostController {
 
      */
 
+    @GetMapping("/members/{memberId}/timeline")
+    public PageCursor<Post> getTimeline(
+            @PathVariable Long memberId,
+           @RequestBody CursorRequest cursorRequest
+    ) {
+        return getTimelinePostsUsecase.execute(memberId, cursorRequest);
+        /*
+        {
+        "size": 10
+        }
 
+        으로 보내면 팔로워 목록 10개 커서 페이징
+         */
+    }
 }

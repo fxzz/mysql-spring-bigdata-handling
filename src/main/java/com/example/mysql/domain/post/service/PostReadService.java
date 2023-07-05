@@ -22,6 +22,32 @@ public class PostReadService {
         return postRepository.groupByCreatedDate(request);
     }
 
+    private List<Post> findAllBy(List<Long> memberIds, CursorRequest cursorRequest) {
+        if (cursorRequest.hasKey()) {
+            return postRepository.findAllByLessThanIdAndMemberIdInAndOrderByIdDesc(
+                    cursorRequest.key(),
+                    memberIds,
+                    cursorRequest.size()
+            );
+        }
+
+        return postRepository.findAllByMemberIdInAndOrderByIdDesc(memberIds, cursorRequest.size());
+    }
+
+
+    public PageCursor<Post> getPosts(List<Long> memberIds, CursorRequest cursorRequest) {
+        var posts = findAllBy(memberIds, cursorRequest);
+        long nextKey = getNextKey(posts);
+        return new PageCursor<Post>(cursorRequest.next(nextKey), posts);
+    }
+
+    private long getNextKey(List<Post> posts) {
+        return posts.stream()
+                .mapToLong(Post::getId)
+                .min()
+                .orElseGet(() -> CursorRequest.NONE_KEY);
+    }
+
     public Page<Post> getPosts(Long memberId, PageRequest pageRequest) {
         return postRepository.findAllByMemberId(memberId, pageRequest);
     }
@@ -48,5 +74,7 @@ public class PostReadService {
 
         return postRepository.findAllByMemberIdAndOrderByIdDesc(memberId, cursorRequest.size());
     }
+
+
 
 }
