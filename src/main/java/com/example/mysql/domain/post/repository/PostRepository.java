@@ -3,7 +3,12 @@ package com.example.mysql.domain.post.repository;
 import com.example.mysql.domain.post.dto.DailyPostCount;
 import com.example.mysql.domain.post.dto.DailyPostCountRequest;
 import com.example.mysql.domain.post.entity.Post;
+import com.example.mysql.util.PageHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -33,11 +38,68 @@ public class PostRepository {
             .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
             .build();
 
-    public List<Post> findByMemberId(Long memberId) {
+
+    public List<Post> findAllByLessThanIdAndMemberIdAndOrderByIdDesc(Long id, Long memberId, int size) {
         var params = new MapSqlParameterSource()
-                .addValue("memberId", memberId);
-        String query = String.format("SELECT * FROM `%s` WHERE id = :id", TABLE);
+                .addValue("id", id)
+                .addValue("memberId", memberId)
+                .addValue("size", size);
+
+        String query = String.format("""
+                SELECT *
+                FROM %s
+                WHERE memberId = :memberId and id < :id
+                ORDER BY id DESC
+                LIMIT :size
+                """, TABLE);
+
         return jdbcTemplate.query(query, params, ROW_MAPPER);
+    }
+
+    public List<Post> findAllByMemberIdAndOrderByIdDesc(Long memberId, int size) {
+        var params = new MapSqlParameterSource()
+                .addValue("memberId", memberId)
+                .addValue("size", size);
+
+        String query = String.format("""
+                SELECT *
+                FROM %s
+                WHERE memberId = :memberId
+                ORDER BY id DESC
+                LIMIT :size
+                """, TABLE);
+
+        return jdbcTemplate.query(query, params, ROW_MAPPER);
+    }
+
+
+    public Page<Post> findAllByMemberId(Long memberId, PageRequest pageRequest) {
+        var params = new MapSqlParameterSource()
+                .addValue("memberId", memberId)
+                .addValue("offset", pageRequest.getOffset())
+                .addValue("size", pageRequest.getPageSize());
+
+        Sort sort = pageRequest.getSort();
+        String query = String.format("""
+                SELECT *
+                FROM %s
+                WHERE memberId = :memberId
+                ORDER BY %s
+                LIMIT :offset, :size
+                """, TABLE, PageHelper.orderBy(sort));
+
+        var posts = jdbcTemplate.query(query, params, ROW_MAPPER);
+        return new PageImpl<Post>(posts, pageRequest, getCount(memberId));
+    }
+
+    private Integer getCount(Long memberId) {
+        String countQuery = String.format("""
+                SELECT count(id)
+                FROM %s
+                WHERE memberId = :memberId
+                """, TABLE);
+        var countParam = new MapSqlParameterSource().addValue("memberId", memberId);
+        return jdbcTemplate.queryForObject(countQuery,  countParam, Integer.class);
     }
 
     public List<DailyPostCount> groupByCreatedDate(DailyPostCountRequest request) {
