@@ -3,9 +3,12 @@ package com.example.mysql.controller;
 import com.example.mysql.domain.post.dto.DailyPostCount;
 import com.example.mysql.domain.post.dto.DailyPostCountRequest;
 import com.example.mysql.domain.post.dto.PostCommand;
+import com.example.mysql.domain.post.entity.Post;
 import com.example.mysql.domain.post.service.PostReadService;
 import com.example.mysql.domain.post.service.PostWriteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,5 +46,11 @@ public class PostController {
           }
         ]
         */
+    }
+
+
+    @GetMapping("/members/{memberId}")
+    public Page<Post> getPosts(@PathVariable Long memberId, @RequestParam Integer page, @RequestParam Integer size) {
+        return postReadService.getPosts(memberId, PageRequest.of(page, size));
     }
 }
