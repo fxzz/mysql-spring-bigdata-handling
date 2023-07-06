@@ -22,7 +22,7 @@ public class MemberController {
 
     @PostMapping("/members")
     public Member register(@RequestBody RegisterMemberCommand command) {
-       return memberWriteService.register(command);
+       return memberWriteService.create(command);
     }
 
     @GetMapping("/members/{id}")

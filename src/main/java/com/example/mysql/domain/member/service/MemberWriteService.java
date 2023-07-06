@@ -7,41 +7,44 @@ import com.example.mysql.domain.member.repository.MemberNicknameHistoryRepositor
 import com.example.mysql.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class MemberWriteService {
-
     private final MemberRepository memberRepository;
-
     private final MemberNicknameHistoryRepository memberNicknameHistoryRepository;
 
-    public Member register(RegisterMemberCommand command) {
+    @Transactional
+    public Member create(RegisterMemberCommand command) {
         var member = Member.builder()
                 .email(command.email())
                 .nickname(command.nickname())
                 .birthday(command.birthday())
                 .build();
-       var saveMember = memberRepository.save(member);
-       saveMemberNicknameHistory(saveMember);
-       return saveMember;
+        var savedMember = memberRepository.save(member);
+
+        saveMemberNicknameHistory(savedMember);
+        return savedMember;
     }
 
+    @Transactional
     public void changeNickname(Long memberId, String nickname) {
         var member = memberRepository.findById(memberId).orElseThrow();
         member.changeNickname(nickname);
-        memberRepository.save(member);
+        var savedMember = memberRepository.save(member);
 
-        saveMemberNicknameHistory(member);
-
-
+        saveMemberNicknameHistory(savedMember);
     }
 
     private void saveMemberNicknameHistory(Member member) {
-        var history = MemberNicknameHistory.builder()
+        var history = MemberNicknameHistory
+                .builder()
                 .memberId(member.getId())
                 .nickname(member.getNickname())
                 .build();
+
         memberNicknameHistoryRepository.save(history);
     }
+
 }
