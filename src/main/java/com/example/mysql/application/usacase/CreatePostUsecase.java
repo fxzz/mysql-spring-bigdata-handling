@@ -19,6 +19,13 @@ public class CreatePostUsecase {
     @Transactional
     public Long execute(PostCommand command) {
         var postId = postWriteService.create(command);
+        /*
+        만약 이미지를 업로드 한다 했을때 트렌잭션이 길어질수 있어서 배제하는 것이 좋다
+        길어지면 db의 커넥션을 오랫동안 점유해 동시 다발적으로 발생하게 되면 커넥션 풀 고갈로 이뤄질수있기 때문
+
+        @@@트렌잭션 범위는 항상 짧게 가져가는것이 좋다 트렌잭션 기간 동안에는 커넥션 풀을 점유하고 있기 때문
+
+         */
 
         var followerMemberIds = followReadService
                 .getFollowers(command.memberId()).stream()
