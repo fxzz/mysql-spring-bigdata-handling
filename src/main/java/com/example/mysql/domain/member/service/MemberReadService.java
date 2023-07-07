@@ -12,29 +12,43 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class MemberReadService {
-
     private final MemberRepository memberRepository;
+
     private final MemberNicknameHistoryRepository memberNicknameHistoryRepository;
 
-    public Member getMember(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow();
+    public MemberDto getMember(Long memberId) {
+        var member = memberRepository.findById(memberId).orElseThrow();
+        return toDto(member);
+    }
+
+    public List<MemberDto> getMembers(List<Long> memberIds) {
+        var members = memberRepository.findAllByIdIn(memberIds);
+        return members.stream()
+                .map(this::toDto)
+                .toList();
     }
 
     public List<MemberNicknameHistoryDto> getNicknameHistories(Long memberId) {
-        return memberNicknameHistoryRepository.findAllByMemberId(memberId).stream()
-                .map(this::toDto).toList();
+        var histories = memberNicknameHistoryRepository.findAllByMemberId(memberId);
+        return histories.stream()
+                .map(this::toDto)
+                .toList();
     }
 
-
-    private MemberNicknameHistoryDto toDto(MemberNicknameHistory history) {
-        return new MemberNicknameHistoryDto(history.getId(), history.getMemberId(), history.getNickname(), history.getCreatedAt());
+    public MemberDto toDto(Member member) {
+        return new MemberDto(member.getId(), member.getNickname(), member.getEmail(), member.getBirthday());
     }
 
-    public List<Member> getMembers(List<Long> memberIds) {
-        return memberRepository.findAllByIdIn(memberIds);
-    }
+    public MemberNicknameHistoryDto toDto(MemberNicknameHistory history) {
+        return new MemberNicknameHistoryDto(
+                history.getId(),
+                history.getMemberId(),
+                history.getNickname(),
+                history.getCreatedAt()
+        );
 
+    }
 }

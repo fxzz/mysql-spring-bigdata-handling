@@ -13,17 +13,14 @@ import org.springframework.util.Assert;
 public class FollowWriteService {
     final private FollowRepository followRepository;
 
-    public Follow create(Member fromMember, Member toMember) {
-        if (fromMember.getId().equals(toMember.getId())) {
-            throw new IllegalArgumentException("From, To 회원이 동일합니다");
-        }
+    public Follow create(MemberDto fromMember, MemberDto toMember) {
+        Assert.isTrue(!fromMember.id().equals(toMember.id()), "From, To 회원이 동일합니다.");
 
         var follow = Follow
                 .builder()
-                .fromMemberId(fromMember.getId())
-                .toMemberId(toMember.getId())
+                .fromMemberId(fromMember.id())
+                .toMemberId(toMember.id())
                 .build();
-
         return followRepository.save(follow);
     }
 }

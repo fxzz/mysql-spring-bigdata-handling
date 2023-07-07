@@ -1,10 +1,12 @@
 package com.example.mysql.controller;
 
+import com.example.mysql.application.usacase.CreatePostLikeUsacase;
 import com.example.mysql.application.usacase.CreatePostUsecase;
 import com.example.mysql.application.usacase.GetTimelinePostsUsecase;
 import com.example.mysql.domain.post.dto.DailyPostCount;
 import com.example.mysql.domain.post.dto.DailyPostCountRequest;
 import com.example.mysql.domain.post.dto.PostCommand;
+import com.example.mysql.domain.post.dto.PostDto;
 import com.example.mysql.domain.post.entity.Post;
 import com.example.mysql.domain.post.service.PostReadService;
 import com.example.mysql.domain.post.service.PostWriteService;
@@ -26,6 +28,7 @@ public class PostController {
     private final PostReadService postReadService;
     final private GetTimelinePostsUsecase getTimelinePostsUsecase;
     final private CreatePostUsecase createPostUsecase;
+    final private CreatePostLikeUsacase createPostLikeUsacase;
 //    @PostMapping("")
 //    public Long create(@RequestBody PostCommand command) {
 //        return postWriteService.create(command);
@@ -55,8 +58,12 @@ public class PostController {
 
 
     @GetMapping("/members/{memberId}")
-    public Page<Post> getPosts(@PathVariable Long memberId, @RequestParam Integer page, @RequestParam Integer size) {
-        return postReadService.getPosts(memberId, PageRequest.of(page, size));
+    public Page<PostDto> getPosts(
+            @PathVariable Long memberId,
+            @RequestParam Integer page,
+            @RequestParam Integer size
+    ) {
+        return postReadService.getPostDtos(memberId, PageRequest.of(page, size));
         /*
         오프셋 기반의 문제점: 게시글이 많으면 전체 페이지를 구하는 카운터를 할때 db 과부화가 걸리고,
                            3페이지를 보고싶으면 1번,2번을 읽어와야 하기 때문에 불필요한 데이터 조회가 발생한다
@@ -91,7 +98,7 @@ public class PostController {
       공간복잡도 희생
     */
     @GetMapping("/members/{memberId}/timeline")
-    public PageCursor<Post> getTimeline(
+    public PageCursor<PostDto> getTimeline(
             @PathVariable Long memberId,
            @RequestBody CursorRequest cursorRequest
     ) {
@@ -130,7 +137,7 @@ public class PostController {
     }
 
     @GetMapping("/members/{memberId}/timeline2")
-    public PageCursor<Post> getTimeline2(
+    public PageCursor<PostDto> getTimeline2(
             @PathVariable Long memberId,
             CursorRequest cursorRequest
     ) {
@@ -141,6 +148,22 @@ public class PostController {
     @PostMapping("/posts/{postId}/like")
     public void likePost(@PathVariable Long postId) {
         postWriteService.likePost(postId);
+        //비관적 락
     }
 
+    @PostMapping("/posts/{postId}/like2")
+    public void likePos2(@PathVariable Long postId) {
+        postWriteService.likePostByOptimisticLock(postId);
+        // 낙관적 락
+    }
+
+
+    @PostMapping("/{postId}/like/v2")
+    public void like(
+            @PathVariable Long postId,
+            @RequestParam Long memberId
+    ) {
+        // 테이블 분리 버전
+        createPostLikeUsacase.execute(postId, memberId);
+    }
 }
