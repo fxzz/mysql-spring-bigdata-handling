@@ -58,3 +58,5 @@ create table Timeline
     constraint Timeline_id_uindex
         primary key (id)
 );
+
+alter table POST add column likeCount int;
